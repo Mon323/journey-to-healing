@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JourneyVoiceRouteImport } from './routes/journey.voice'
 import { Route as JourneyVideosRouteImport } from './routes/journey.videos'
@@ -19,6 +20,7 @@ import { Route as JourneyOvertsRouteImport } from './routes/journey.overts'
 import { Route as JourneyGratitudeRouteImport } from './routes/journey.gratitude'
 import { Route as JourneyGoalsRouteImport } from './routes/journey.goals'
 import { Route as JourneyAudioRouteImport } from './routes/journey.audio'
+import { Route as AdminUserUserIdRouteImport } from './routes/admin.user.$userId'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -28,6 +30,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -70,9 +77,15 @@ const JourneyAudioRoute = JourneyAudioRouteImport.update({
   path: '/journey/audio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUserUserIdRoute = AdminUserUserIdRouteImport.update({
+  id: '/user/$userId',
+  path: '/user/$userId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/journey/audio': typeof JourneyAudioRoute
@@ -82,9 +95,11 @@ export interface FileRoutesByFullPath {
   '/journey/test': typeof JourneyTestRoute
   '/journey/videos': typeof JourneyVideosRoute
   '/journey/voice': typeof JourneyVoiceRoute
+  '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/journey/audio': typeof JourneyAudioRoute
@@ -94,10 +109,12 @@ export interface FileRoutesByTo {
   '/journey/test': typeof JourneyTestRoute
   '/journey/videos': typeof JourneyVideosRoute
   '/journey/voice': typeof JourneyVoiceRoute
+  '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/journey/audio': typeof JourneyAudioRoute
@@ -107,11 +124,13 @@ export interface FileRoutesById {
   '/journey/test': typeof JourneyTestRoute
   '/journey/videos': typeof JourneyVideosRoute
   '/journey/voice': typeof JourneyVoiceRoute
+  '/admin/user/$userId': typeof AdminUserUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/dashboard'
     | '/journey/audio'
@@ -121,9 +140,11 @@ export interface FileRouteTypes {
     | '/journey/test'
     | '/journey/videos'
     | '/journey/voice'
+    | '/admin/user/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/auth'
     | '/dashboard'
     | '/journey/audio'
@@ -133,9 +154,11 @@ export interface FileRouteTypes {
     | '/journey/test'
     | '/journey/videos'
     | '/journey/voice'
+    | '/admin/user/$userId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/auth'
     | '/dashboard'
     | '/journey/audio'
@@ -145,10 +168,12 @@ export interface FileRouteTypes {
     | '/journey/test'
     | '/journey/videos'
     | '/journey/voice'
+    | '/admin/user/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   JourneyAudioRoute: typeof JourneyAudioRoute
@@ -174,6 +199,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -232,11 +264,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JourneyAudioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/user/$userId': {
+      id: '/admin/user/$userId'
+      path: '/user/$userId'
+      fullPath: '/admin/user/$userId'
+      preLoaderRoute: typeof AdminUserUserIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminUserUserIdRoute: typeof AdminUserUserIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminUserUserIdRoute: AdminUserUserIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   JourneyAudioRoute: JourneyAudioRoute,
