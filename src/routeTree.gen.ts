@@ -12,6 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JourneyVoiceRouteImport } from './routes/journey.voice'
+import { Route as JourneyVideosRouteImport } from './routes/journey.videos'
+import { Route as JourneyTestRouteImport } from './routes/journey.test'
+import { Route as JourneyOvertsRouteImport } from './routes/journey.overts'
+import { Route as JourneyGratitudeRouteImport } from './routes/journey.gratitude'
+import { Route as JourneyGoalsRouteImport } from './routes/journey.goals'
+import { Route as JourneyAudioRouteImport } from './routes/journey.audio'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -28,35 +35,129 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JourneyVoiceRoute = JourneyVoiceRouteImport.update({
+  id: '/journey/voice',
+  path: '/journey/voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyVideosRoute = JourneyVideosRouteImport.update({
+  id: '/journey/videos',
+  path: '/journey/videos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyTestRoute = JourneyTestRouteImport.update({
+  id: '/journey/test',
+  path: '/journey/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyOvertsRoute = JourneyOvertsRouteImport.update({
+  id: '/journey/overts',
+  path: '/journey/overts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyGratitudeRoute = JourneyGratitudeRouteImport.update({
+  id: '/journey/gratitude',
+  path: '/journey/gratitude',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyGoalsRoute = JourneyGoalsRouteImport.update({
+  id: '/journey/goals',
+  path: '/journey/goals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyAudioRoute = JourneyAudioRouteImport.update({
+  id: '/journey/audio',
+  path: '/journey/audio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/journey/audio': typeof JourneyAudioRoute
+  '/journey/goals': typeof JourneyGoalsRoute
+  '/journey/gratitude': typeof JourneyGratitudeRoute
+  '/journey/overts': typeof JourneyOvertsRoute
+  '/journey/test': typeof JourneyTestRoute
+  '/journey/videos': typeof JourneyVideosRoute
+  '/journey/voice': typeof JourneyVoiceRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/journey/audio': typeof JourneyAudioRoute
+  '/journey/goals': typeof JourneyGoalsRoute
+  '/journey/gratitude': typeof JourneyGratitudeRoute
+  '/journey/overts': typeof JourneyOvertsRoute
+  '/journey/test': typeof JourneyTestRoute
+  '/journey/videos': typeof JourneyVideosRoute
+  '/journey/voice': typeof JourneyVoiceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/journey/audio': typeof JourneyAudioRoute
+  '/journey/goals': typeof JourneyGoalsRoute
+  '/journey/gratitude': typeof JourneyGratitudeRoute
+  '/journey/overts': typeof JourneyOvertsRoute
+  '/journey/test': typeof JourneyTestRoute
+  '/journey/videos': typeof JourneyVideosRoute
+  '/journey/voice': typeof JourneyVoiceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/journey/audio'
+    | '/journey/goals'
+    | '/journey/gratitude'
+    | '/journey/overts'
+    | '/journey/test'
+    | '/journey/videos'
+    | '/journey/voice'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard'
-  id: '__root__' | '/' | '/auth' | '/dashboard'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/journey/audio'
+    | '/journey/goals'
+    | '/journey/gratitude'
+    | '/journey/overts'
+    | '/journey/test'
+    | '/journey/videos'
+    | '/journey/voice'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/journey/audio'
+    | '/journey/goals'
+    | '/journey/gratitude'
+    | '/journey/overts'
+    | '/journey/test'
+    | '/journey/videos'
+    | '/journey/voice'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  JourneyAudioRoute: typeof JourneyAudioRoute
+  JourneyGoalsRoute: typeof JourneyGoalsRoute
+  JourneyGratitudeRoute: typeof JourneyGratitudeRoute
+  JourneyOvertsRoute: typeof JourneyOvertsRoute
+  JourneyTestRoute: typeof JourneyTestRoute
+  JourneyVideosRoute: typeof JourneyVideosRoute
+  JourneyVoiceRoute: typeof JourneyVoiceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +183,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/journey/voice': {
+      id: '/journey/voice'
+      path: '/journey/voice'
+      fullPath: '/journey/voice'
+      preLoaderRoute: typeof JourneyVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/videos': {
+      id: '/journey/videos'
+      path: '/journey/videos'
+      fullPath: '/journey/videos'
+      preLoaderRoute: typeof JourneyVideosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/test': {
+      id: '/journey/test'
+      path: '/journey/test'
+      fullPath: '/journey/test'
+      preLoaderRoute: typeof JourneyTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/overts': {
+      id: '/journey/overts'
+      path: '/journey/overts'
+      fullPath: '/journey/overts'
+      preLoaderRoute: typeof JourneyOvertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/gratitude': {
+      id: '/journey/gratitude'
+      path: '/journey/gratitude'
+      fullPath: '/journey/gratitude'
+      preLoaderRoute: typeof JourneyGratitudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/goals': {
+      id: '/journey/goals'
+      path: '/journey/goals'
+      fullPath: '/journey/goals'
+      preLoaderRoute: typeof JourneyGoalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey/audio': {
+      id: '/journey/audio'
+      path: '/journey/audio'
+      fullPath: '/journey/audio'
+      preLoaderRoute: typeof JourneyAudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,7 +239,24 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  JourneyAudioRoute: JourneyAudioRoute,
+  JourneyGoalsRoute: JourneyGoalsRoute,
+  JourneyGratitudeRoute: JourneyGratitudeRoute,
+  JourneyOvertsRoute: JourneyOvertsRoute,
+  JourneyTestRoute: JourneyTestRoute,
+  JourneyVideosRoute: JourneyVideosRoute,
+  JourneyVoiceRoute: JourneyVoiceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
