@@ -14,16 +14,243 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      goals: {
+        Row: {
+          admin_feedback: string | null
+          by_when: string | null
+          created_at: string
+          goal_text: string
+          how_text: string | null
+          id: string
+          status: Database["public"]["Enums"]["submission_status"]
+          updated_at: string
+          user_id: string
+          why_text: string | null
+        }
+        Insert: {
+          admin_feedback?: string | null
+          by_when?: string | null
+          created_at?: string
+          goal_text: string
+          how_text?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["submission_status"]
+          updated_at?: string
+          user_id: string
+          why_text?: string | null
+        }
+        Update: {
+          admin_feedback?: string | null
+          by_when?: string | null
+          created_at?: string
+          goal_text?: string
+          how_text?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["submission_status"]
+          updated_at?: string
+          user_id?: string
+          why_text?: string | null
+        }
+        Relationships: []
+      }
+      gratitude_entries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      overts: {
+        Row: {
+          admin_feedback: string | null
+          created_at: string
+          emotions: string | null
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          what_happened: string | null
+          who_involved: string | null
+        }
+        Insert: {
+          admin_feedback?: string | null
+          created_at?: string
+          emotions?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          what_happened?: string | null
+          who_involved?: string | null
+        }
+        Update: {
+          admin_feedback?: string | null
+          created_at?: string
+          emotions?: string | null
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          what_happened?: string | null
+          who_involved?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          account_status: Database["public"]["Enums"]["account_status"]
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"]
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          account_status?: Database["public"]["Enums"]["account_status"]
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stage_submissions: {
+        Row: {
+          admin_feedback: string | null
+          audio_path: string | null
+          created_at: string
+          id: string
+          question_index: number
+          question_text: string | null
+          stage: Database["public"]["Enums"]["stage_key"]
+          status: Database["public"]["Enums"]["submission_status"]
+          text_answer: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_feedback?: string | null
+          audio_path?: string | null
+          created_at?: string
+          id?: string
+          question_index?: number
+          question_text?: string | null
+          stage: Database["public"]["Enums"]["stage_key"]
+          status?: Database["public"]["Enums"]["submission_status"]
+          text_answer?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_feedback?: string | null
+          audio_path?: string | null
+          created_at?: string
+          id?: string
+          question_index?: number
+          question_text?: string | null
+          stage?: Database["public"]["Enums"]["stage_key"]
+          status?: Database["public"]["Enums"]["submission_status"]
+          text_answer?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          current_stage: Database["public"]["Enums"]["stage_key"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_stage?: Database["public"]["Enums"]["stage_key"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_stage?: Database["public"]["Enums"]["stage_key"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      account_status: "pending" | "approved" | "rejected"
+      app_role: "admin" | "user"
+      stage_key:
+        | "account_approval"
+        | "training_videos"
+        | "audio_lessons"
+        | "knowledge_test"
+        | "voice_answers"
+        | "overts"
+        | "goals"
+        | "gratitude"
+        | "completed"
+      submission_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +377,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_status: ["pending", "approved", "rejected"],
+      app_role: ["admin", "user"],
+      stage_key: [
+        "account_approval",
+        "training_videos",
+        "audio_lessons",
+        "knowledge_test",
+        "voice_answers",
+        "overts",
+        "goals",
+        "gratitude",
+        "completed",
+      ],
+      submission_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
