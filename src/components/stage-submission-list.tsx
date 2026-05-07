@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import type { StageKey } from "@/lib/stages";
 
 type Sub = {
   id: string;
@@ -14,7 +15,7 @@ type Sub = {
   admin_feedback: string | null;
 };
 
-export function StageSubmissionList({ stage }: { stage: string }) {
+export function StageSubmissionList({ stage }: { stage: StageKey }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Sub[]>([]);
 
