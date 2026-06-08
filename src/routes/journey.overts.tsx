@@ -8,13 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { overts, progress as progressApi, onLocalChange, type Overt } from "@/lib/api";
 import { toast } from "sonner";
-
-type Overt = {
-  id: string; title: string; what_happened: string | null; who_involved: string | null;
-  emotions: string | null; status: "pending" | "approved" | "rejected"; admin_feedback: string | null;
-};
 
 export const Route = createFileRoute("/journey/overts")({
   component: () => <ProtectedShell><Page /></ProtectedShell>,
@@ -26,23 +21,21 @@ function Page() {
   const [form, setForm] = useState({ title: "", what_happened: "", who_involved: "", emotions: "" });
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
+  useEffect(() => {
     if (!user) return;
-    const { data } = await supabase.from("overts").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setList((data as Overt[]) || []);
-  };
-  useEffect(() => { load(); }, [user]);
+    const sync = () => setList(overts.list(user.id));
+    sync();
+    return onLocalChange(sync);
+  }, [user]);
 
-  const add = async () => {
+  const add = () => {
     if (!user) return;
     if (form.title.trim().length < 2) return toast.error("Give it a short title.");
     setBusy(true);
-    const { error } = await supabase.from("overts").insert({ user_id: user.id, ...form } as any);
+    overts.add({ user_id: user.id, ...form });
     setBusy(false);
-    if (error) return toast.error(error.message);
     setForm({ title: "", what_happened: "", who_involved: "", emotions: "" });
     toast.success("Submitted for review.");
-    load();
   };
 
   return (
@@ -78,9 +71,9 @@ function Page() {
         ))}
       </div>
 
-      <Button variant="outline" onClick={async () => {
+      <Button variant="outline" onClick={() => {
         if (!user) return;
-        await supabase.from("user_progress").update({ current_stage: "goals" }).eq("user_id", user.id);
+        progressApi.set(user.id, "goals");
         window.location.href = "/journey/goals";
       }}>I'm done with overts — continue to goals</Button>
     </div>

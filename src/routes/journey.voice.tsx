@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { submissions, progress as progressApi, audioStore, onLocalChange } from "@/lib/api";
 import { toast } from "sonner";
 import { VoiceRecorder } from "@/components/voice-recorder";
 import { StageSubmissionList } from "@/components/stage-submission-list";
@@ -26,27 +26,25 @@ function Page() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("stage_submissions").select("question_index, status")
-      .eq("user_id", user.id).eq("stage", "voice_answers")
-      .then(({ data }) => {
-        setRejected(new Set((data || []).filter(d => d.status === "rejected").map(d => d.question_index)));
-      });
+    const sync = () => {
+      const items = submissions.list(user.id, "voice_answers");
+      setRejected(new Set(items.filter(d => d.status === "rejected").map(d => d.question_index)));
+    };
+    sync();
+    return onLocalChange(sync);
   }, [user]);
 
-  const submit = async (i: number) => {
+  const submit = (i: number) => {
     if (!user || !blobs[i]) return toast.error("Record your answer first.");
     setBusy(true);
-    const path = `${user.id}/voice_${i}_${Date.now()}.webm`;
-    const { error: upErr } = await supabase.storage.from("recordings").upload(path, blobs[i]!, { contentType: "audio/webm" });
-    if (upErr) { setBusy(false); return toast.error(upErr.message); }
-    const { error } = await supabase.from("stage_submissions").insert({
+    const audioPath = audioStore.store(blobs[i]!);
+    submissions.insertMany([{
       user_id: user.id, stage: "voice_answers", question_index: i,
-      question_text: QUESTIONS[i], audio_path: path,
-    } as any);
+      question_text: QUESTIONS[i], text_answer: null, audio_path: audioPath,
+    }]);
+    progressApi.set(user.id, "overts");
     setBusy(false);
-    if (error) return toast.error(error.message);
     toast.success("Recording submitted.");
-    await supabase.from("user_progress").update({ current_stage: "overts" }).eq("user_id", user.id);
   };
 
   return (

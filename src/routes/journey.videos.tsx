@@ -1,19 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ProtectedShell } from "@/components/protected-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { submissions, progress as progressApi } from "@/lib/api";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/journey/videos")({
   component: () => <ProtectedShell><Page /></ProtectedShell>,
 });
 
-// Placeholder content — replace with real videos later
 const VIDEOS = [
   { id: "v1", title: "Introduction", url: "https://www.youtube.com/embed/inpok4MKVLM" },
 ];
@@ -26,23 +24,23 @@ function Page() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("stage_submissions").select("question_text, status")
-      .eq("user_id", user.id).eq("stage", "training_videos")
-      .then(({ data }) => setWatched(new Set((data || []).filter(d => d.status !== "rejected").map(d => d.question_text!))));
+    const prev = submissions.list(user.id, "training_videos")
+      .filter(d => d.status !== "rejected" && d.question_text)
+      .map(d => d.question_text!);
+    setWatched(new Set(prev));
   }, [user]);
 
-  const submit = async () => {
+  const submit = () => {
     if (!user) return;
     setBusy(true);
     const rows = VIDEOS.filter(v => watched.has(v.id)).map((v, i) => ({
       user_id: user.id, stage: "training_videos" as const, question_index: i,
-      question_text: v.id, text_answer: `Watched: ${v.title}`,
+      question_text: v.id, text_answer: `Watched: ${v.title}`, audio_path: null,
     }));
     if (rows.length !== VIDEOS.length) { setBusy(false); return toast.error("Mark all videos as watched."); }
-    const { error } = await supabase.from("stage_submissions").upsert(rows as any);
+    submissions.upsertByQuestionText(rows);
+    progressApi.set(user.id, "audio_lessons");
     setBusy(false);
-    if (error) return toast.error(error.message);
-    await supabase.from("user_progress").update({ current_stage: "audio_lessons" }).eq("user_id", user.id);
     toast.success("Progress saved.");
     nav({ to: "/journey/audio" });
   };

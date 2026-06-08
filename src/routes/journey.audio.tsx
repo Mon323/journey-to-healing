@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { progress as progressApi } from "@/lib/api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/journey/audio")({
@@ -20,10 +20,10 @@ function Page() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [done, setDone] = useState<Set<string>>(new Set());
-  const submit = async () => {
+  const submit = () => {
     if (!user) return;
     if (done.size !== LESSONS.length) return toast.error("Listen to each lesson first.");
-    await supabase.from("user_progress").update({ current_stage: "knowledge_test" }).eq("user_id", user.id);
+    progressApi.set(user.id, "knowledge_test");
     toast.success("Saved.");
     nav({ to: "/journey/test" });
   };

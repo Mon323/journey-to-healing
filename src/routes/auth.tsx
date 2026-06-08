@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,9 @@ function AuthPage() {
               <TabsContent value="signin"><SignInForm /></TabsContent>
               <TabsContent value="signup"><SignUpForm /></TabsContent>
             </Tabs>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Data is stored locally in your browser. Connect your MariaDB API later by editing <code>src/lib/api.ts</code>.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -65,15 +68,18 @@ function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signInSchema.safeParse({ email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    window.location.href = "/dashboard";
+    try {
+      auth.signIn(parsed.data);
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast.error(err.message);
+      setBusy(false);
+    }
   };
   return (
     <form onSubmit={onSubmit} className="mt-4 space-y-4">
@@ -95,23 +101,19 @@ function SignUpForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signUpSchema.safeParse({ full_name: name, email, password });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: parsed.data.full_name },
-      },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created. Welcome!");
-    window.location.href = "/dashboard";
+    try {
+      auth.signUp({ ...parsed.data });
+      toast.success("Account created. Welcome!");
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      toast.error(err.message);
+      setBusy(false);
+    }
   };
   return (
     <form onSubmit={onSubmit} className="mt-4 space-y-4">
@@ -126,7 +128,7 @@ function SignUpForm() {
       <div>
         <Label htmlFor="su-pw">Password</Label>
         <Input id="su-pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
-        <p className="mt-1 text-xs text-muted-foreground">At least 8 characters.</p>
+        <p className="mt-1 text-xs text-muted-foreground">At least 8 characters. The first account becomes admin.</p>
       </div>
       <Button type="submit" className="w-full" disabled={busy}>{busy ? "Creating…" : "Create account"}</Button>
     </form>

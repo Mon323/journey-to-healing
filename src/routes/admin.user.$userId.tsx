@@ -6,61 +6,53 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  profiles, progress as progressApi, submissions, overts, goals, onLocalChange,
+  type Profile, type Progress, type Submission, type Overt, type Goal,
+} from "@/lib/api";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { STAGES } from "@/lib/stages";
+import { STAGES, type StageKey } from "@/lib/stages";
 
 export const Route = createFileRoute("/admin/user/$userId")({
   component: () => <ProtectedShell requireAdmin><Page /></ProtectedShell>,
 });
 
-type Submission = {
-  id: string; stage: string; question_index: number; question_text: string | null;
-  text_answer: string | null; audio_path: string | null;
-  status: "pending" | "approved" | "rejected"; admin_feedback: string | null; created_at: string;
-};
-type Overt = { id: string; title: string; what_happened: string | null; status: string; admin_feedback: string | null };
-type Goal = { id: string; goal_text: string; status: string; admin_feedback: string | null };
-
 function Page() {
   const { userId } = Route.useParams();
-  const [profile, setProfile] = useState<any>(null);
-  const [progress, setProgress] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [subs, setSubs] = useState<Submission[]>([]);
-  const [overts, setOverts] = useState<Overt[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [overtList, setOvertList] = useState<Overt[]>([]);
+  const [goalList, setGoalList] = useState<Goal[]>([]);
 
-  const load = async () => {
-    const [{ data: p }, { data: pr }, { data: s }, { data: o }, { data: g }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_progress").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("stage_submissions").select("*").eq("user_id", userId).order("created_at"),
-      supabase.from("overts").select("*").eq("user_id", userId).order("created_at"),
-      supabase.from("goals").select("*").eq("user_id", userId).order("created_at"),
-    ]);
-    setProfile(p); setProgress(pr); setSubs((s as Submission[]) || []);
-    setOverts((o as Overt[]) || []); setGoals((g as Goal[]) || []);
+  const load = () => {
+    setProfile(profiles.get(userId));
+    setProgress(progressApi.get(userId));
+    setSubs(submissions.list(userId));
+    setOvertList(overts.list(userId));
+    setGoalList(goals.list(userId));
   };
-  useEffect(() => { load(); }, [userId]);
-
-  const updateSub = async (id: string, status: "approved" | "rejected", feedback: string) => {
-    const { error } = await supabase.from("stage_submissions").update({ status, admin_feedback: feedback || null }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Updated.");
+  useEffect(() => {
     load();
+    return onLocalChange(load);
+  }, [userId]);
+
+  const updateSub = (id: string, status: "approved" | "rejected", feedback: string) => {
+    submissions.update(id, { status, admin_feedback: feedback || null });
+    toast.success("Updated.");
   };
-  const updateOvert = async (id: string, status: "approved" | "rejected", feedback: string) => {
-    await supabase.from("overts").update({ status, admin_feedback: feedback || null }).eq("id", id);
-    toast.success("Updated."); load();
+  const updateOvert = (id: string, status: "approved" | "rejected", feedback: string) => {
+    overts.update(id, { status, admin_feedback: feedback || null });
+    toast.success("Updated.");
   };
-  const updateGoal = async (id: string, status: "approved" | "rejected", feedback: string) => {
-    await supabase.from("goals").update({ status, admin_feedback: feedback || null }).eq("id", id);
-    toast.success("Updated."); load();
+  const updateGoal = (id: string, status: "approved" | "rejected", feedback: string) => {
+    goals.update(id, { status, admin_feedback: feedback || null });
+    toast.success("Updated.");
   };
-  const advance = async (stage: string) => {
-    await supabase.from("user_progress").update({ current_stage: stage as any }).eq("user_id", userId);
-    toast.success("Stage updated."); load();
+  const advance = (stage: string) => {
+    progressApi.set(userId, stage as StageKey);
+    toast.success("Stage updated.");
   };
 
   return (
@@ -98,18 +90,18 @@ function Page() {
       <section>
         <h2 className="mb-3 font-serif text-2xl">Overts</h2>
         <div className="space-y-3">
-          {overts.map((o) => <ReviewCard key={o.id} title={o.title} body={o.what_happened} status={o.status} feedback={o.admin_feedback}
+          {overtList.map((o) => <ReviewCard key={o.id} title={o.title} body={o.what_happened} status={o.status} feedback={o.admin_feedback}
             onUpdate={(st, fb) => updateOvert(o.id, st, fb)} />)}
-          {!overts.length && <p className="text-sm text-muted-foreground">None yet.</p>}
+          {!overtList.length && <p className="text-sm text-muted-foreground">None yet.</p>}
         </div>
       </section>
 
       <section>
         <h2 className="mb-3 font-serif text-2xl">Goals</h2>
         <div className="space-y-3">
-          {goals.map((g) => <ReviewCard key={g.id} title={g.goal_text} body={null} status={g.status} feedback={g.admin_feedback}
+          {goalList.map((g) => <ReviewCard key={g.id} title={g.goal_text} body={null} status={g.status} feedback={g.admin_feedback}
             onUpdate={(st, fb) => updateGoal(g.id, st, fb)} />)}
-          {!goals.length && <p className="text-sm text-muted-foreground">None yet.</p>}
+          {!goalList.length && <p className="text-sm text-muted-foreground">None yet.</p>}
         </div>
       </section>
     </div>
@@ -118,12 +110,6 @@ function Page() {
 
 function SubmissionCard({ sub, onUpdate }: { sub: Submission; onUpdate: (id: string, st: "approved" | "rejected", fb: string) => void }) {
   const [feedback, setFeedback] = useState(sub.admin_feedback || "");
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!sub.audio_path) return;
-    supabase.storage.from("recordings").createSignedUrl(sub.audio_path, 3600)
-      .then(({ data }) => data && setAudioUrl(data.signedUrl));
-  }, [sub.audio_path]);
   return (
     <Card>
       <CardHeader>
@@ -134,7 +120,7 @@ function SubmissionCard({ sub, onUpdate }: { sub: Submission; onUpdate: (id: str
       </CardHeader>
       <CardContent className="space-y-3">
         {sub.text_answer && <p className="whitespace-pre-wrap rounded-md bg-muted p-3 text-sm">{sub.text_answer}</p>}
-        {audioUrl && <audio controls src={audioUrl} className="w-full" />}
+        {sub.audio_path && <audio controls src={sub.audio_path} className="w-full" />}
         <Textarea placeholder="Feedback (e.g. 'redo question 3 — say more about…')" value={feedback} onChange={(e) => setFeedback(e.target.value)} />
         <div className="flex gap-2">
           <Button size="sm" onClick={() => onUpdate(sub.id, "approved", feedback)}>Approve</Button>

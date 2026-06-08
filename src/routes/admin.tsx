@@ -4,34 +4,24 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { profiles, onLocalChange, type Profile } from "@/lib/api";
 import { toast } from "sonner";
-
-type UserRow = {
-  id: string; full_name: string | null; email: string | null;
-  account_status: "pending" | "approved" | "rejected";
-};
 
 export const Route = createFileRoute("/admin")({
   component: () => <ProtectedShell requireAdmin><Page /></ProtectedShell>,
 });
 
 function Page() {
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const load = async () => {
-    const { data } = await supabase.from("profiles").select("id, full_name, email, account_status").order("created_at", { ascending: false });
-    setUsers((data as UserRow[]) || []);
-  };
-  useEffect(() => { load(); }, []);
-
-  const setStatus = async (id: string, status: UserRow["account_status"]) => {
-    const { error } = await supabase.from("profiles").update({ account_status: status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    if (status === "approved") {
-      await supabase.from("user_progress").update({ current_stage: "training_videos" }).eq("user_id", id);
-    }
-    toast.success(`User ${status}.`);
+  const [users, setUsers] = useState<Profile[]>([]);
+  const load = () => setUsers(profiles.list());
+  useEffect(() => {
     load();
+    return onLocalChange(load);
+  }, []);
+
+  const setStatus = (id: string, status: Profile["account_status"]) => {
+    profiles.setStatus(id, status);
+    toast.success(`User ${status}.`);
   };
 
   return (

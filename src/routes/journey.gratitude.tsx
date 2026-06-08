@@ -5,11 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { gratitude, onLocalChange, type Gratitude } from "@/lib/api";
 import { Heart, X } from "lucide-react";
-
-type Entry = { id: string; content: string; created_at: string };
 
 export const Route = createFileRoute("/journey/gratitude")({
   component: () => <ProtectedShell><Page /></ProtectedShell>,
@@ -17,28 +14,21 @@ export const Route = createFileRoute("/journey/gratitude")({
 
 function Page() {
   const { user } = useAuth();
-  const [list, setList] = useState<Entry[]>([]);
+  const [list, setList] = useState<Gratitude[]>([]);
   const [text, setText] = useState("");
 
-  const load = async () => {
+  useEffect(() => {
     if (!user) return;
-    const { data } = await supabase.from("gratitude_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setList((data as Entry[]) || []);
-  };
-  useEffect(() => { load(); }, [user]);
+    const sync = () => setList(gratitude.list(user.id));
+    sync();
+    return onLocalChange(sync);
+  }, [user]);
 
-  const add = async () => {
+  const add = () => {
     if (!user) return;
     if (text.trim().length < 2) return;
-    const { error } = await supabase.from("gratitude_entries").insert({ user_id: user.id, content: text.trim() } as any);
-    if (error) return toast.error(error.message);
+    gratitude.add(user.id, text.trim());
     setText("");
-    load();
-  };
-
-  const remove = async (id: string) => {
-    await supabase.from("gratitude_entries").delete().eq("id", id);
-    load();
   };
 
   return (
@@ -59,7 +49,7 @@ function Page() {
           <Card key={e.id}>
             <CardContent className="flex items-start justify-between gap-4 pt-6">
               <p className="text-sm">{e.content}</p>
-              <button onClick={() => remove(e.id)} className="text-muted-foreground hover:text-destructive">
+              <button onClick={() => gratitude.remove(e.id)} className="text-muted-foreground hover:text-destructive">
                 <X className="h-4 w-4" />
               </button>
             </CardContent>
