@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { submissions, progress as progressApi } from "@/lib/api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/journey/test")({
@@ -23,18 +23,16 @@ function Page() {
   const [answers, setAnswers] = useState<string[]>(QUESTIONS.map(() => ""));
   const [busy, setBusy] = useState(false);
 
-  const submit = async () => {
+  const submit = () => {
     if (!user) return;
     if (answers.some(a => a.trim().length < 10)) return toast.error("Please write at least 10 characters per answer.");
     setBusy(true);
-    const rows = QUESTIONS.map((q, i) => ({
+    submissions.insertMany(QUESTIONS.map((q, i) => ({
       user_id: user.id, stage: "knowledge_test" as const, question_index: i,
-      question_text: q, text_answer: answers[i],
-    }));
-    const { error } = await supabase.from("stage_submissions").insert(rows as any);
+      question_text: q, text_answer: answers[i], audio_path: null,
+    })));
+    progressApi.set(user.id, "voice_answers");
     setBusy(false);
-    if (error) return toast.error(error.message);
-    await supabase.from("user_progress").update({ current_stage: "voice_answers" }).eq("user_id", user.id);
     toast.success("Submitted for review.");
     nav({ to: "/dashboard" });
   };

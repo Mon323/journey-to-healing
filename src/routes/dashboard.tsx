@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ProtectedShell } from "@/components/protected-shell";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { progress as progressApi, submissions, onLocalChange } from "@/lib/api";
 import { STAGES, stageIndex, type StageKey } from "@/lib/stages";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -21,10 +21,13 @@ function Dashboard() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("user_progress").select("current_stage").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => data && setStage(data.current_stage));
-    supabase.from("stage_submissions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "pending")
-      .then(({ count }) => setPendingCount(count || 0));
+    const sync = () => {
+      const p = progressApi.get(user.id);
+      if (p) setStage(p.current_stage);
+      setPendingCount(submissions.countPending(user.id));
+    };
+    sync();
+    return onLocalChange(sync);
   }, [user]);
 
   const isPending = profile?.account_status === "pending";
@@ -70,7 +73,7 @@ function Dashboard() {
       </Card>
 
       <div className="grid gap-4">
-        {STAGES.filter((s) => s.key !== "account_approval").map((s, i) => {
+        {STAGES.filter((s) => s.key !== "account_approval").map((s) => {
           const sIdx = stageIndex(s.key);
           const status =
             profile?.account_status !== "approved" ? "locked"

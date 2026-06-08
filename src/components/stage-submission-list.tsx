@@ -1,33 +1,19 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { submissions, onLocalChange, type Submission } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { StageKey } from "@/lib/stages";
 
-type Sub = {
-  id: string;
-  question_index: number;
-  question_text: string | null;
-  text_answer: string | null;
-  audio_path: string | null;
-  status: "pending" | "approved" | "rejected";
-  admin_feedback: string | null;
-};
-
 export function StageSubmissionList({ stage }: { stage: StageKey }) {
   const { user } = useAuth();
-  const [items, setItems] = useState<Sub[]>([]);
+  const [items, setItems] = useState<Submission[]>([]);
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("stage_submissions")
-      .select("id, question_index, question_text, text_answer, audio_path, status, admin_feedback")
-      .eq("user_id", user.id)
-      .eq("stage", stage)
-      .order("created_at", { ascending: true })
-      .then(({ data }) => setItems((data as Sub[]) || []));
+    const sync = () => setItems(submissions.list(user.id, stage));
+    sync();
+    return onLocalChange(sync);
   }, [user, stage]);
 
   if (!items.length) return null;

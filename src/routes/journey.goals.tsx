@@ -8,10 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { supabase } from "@/integrations/supabase/client";
+import { goals, progress as progressApi, onLocalChange, type Goal } from "@/lib/api";
 import { toast } from "sonner";
-
-type Goal = { id: string; goal_text: string; why_text: string | null; how_text: string | null; by_when: string | null; status: "pending" | "approved" | "rejected"; admin_feedback: string | null };
 
 export const Route = createFileRoute("/journey/goals")({
   component: () => <ProtectedShell><Page /></ProtectedShell>,
@@ -22,21 +20,19 @@ function Page() {
   const [list, setList] = useState<Goal[]>([]);
   const [form, setForm] = useState({ goal_text: "", why_text: "", how_text: "", by_when: "" });
 
-  const load = async () => {
+  useEffect(() => {
     if (!user) return;
-    const { data } = await supabase.from("goals").select("*").eq("user_id", user.id).order("created_at");
-    setList((data as Goal[]) || []);
-  };
-  useEffect(() => { load(); }, [user]);
+    const sync = () => setList(goals.list(user.id));
+    sync();
+    return onLocalChange(sync);
+  }, [user]);
 
-  const add = async () => {
+  const add = () => {
     if (!user) return;
     if (form.goal_text.trim().length < 3) return toast.error("Write your goal.");
-    const { error } = await supabase.from("goals").insert({ user_id: user.id, ...form, by_when: form.by_when || null } as any);
-    if (error) return toast.error(error.message);
+    goals.add({ user_id: user.id, ...form, by_when: form.by_when || null });
     setForm({ goal_text: "", why_text: "", how_text: "", by_when: "" });
     toast.success("Goal submitted.");
-    load();
   };
 
   return (
@@ -71,9 +67,9 @@ function Page() {
           </Card>
         ))}
       </div>
-      <Button variant="outline" onClick={async () => {
+      <Button variant="outline" onClick={() => {
         if (!user) return;
-        await supabase.from("user_progress").update({ current_stage: "gratitude" }).eq("user_id", user.id);
+        progressApi.set(user.id, "gratitude");
         window.location.href = "/journey/gratitude";
       }}>Continue to gratitude</Button>
     </div>
